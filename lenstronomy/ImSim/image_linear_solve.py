@@ -48,6 +48,8 @@ class ImageLinearFit(ImageModel):
         if self._pixelbased_bool is True:
             # update the pixel-based solver with the likelihood mask
             self.PixelSolver.set_likelihood_mask(self.likelihood_mask)
+        
+        self._check_marg=data_class.check_marg()
 
     def image_linear_solve(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, kwargs_ps=None,
                            kwargs_extinction=None, kwargs_special=None, inv_bool=False):
@@ -92,8 +94,12 @@ class ImageLinearFit(ImageModel):
             C_D_response, model_error = self._error_response(kwargs_lens, kwargs_ps, kwargs_special=kwargs_special)
             d = self.data_response
             param, cov_param, wls_model = de_lens.get_param_WLS(A.T, 1 / C_D_response, d, inv_bool=inv_bool)
-            model = self.array_masked2image(wls_model)
-            _, _, _, _ = self.update_linear_kwargs(param, kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps)
+            # check_marg determines whether or not to do the linear parameter marginalisation
+            if self._check_marg == True:
+                model = self.array_masked2image(wls_model)
+                _, _, _, _ = self.update_linear_kwargs(param, kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps)
+            else:
+                model = self.image(kwargs_lens, kwargs_source, kwargs_lens_light, kwargs_ps,kwargs_extinction, kwargs_special)
         return model, model_error, cov_param, param
 
     def image_pixelbased_solve(self, kwargs_lens=None, kwargs_source=None, kwargs_lens_light=None, 
