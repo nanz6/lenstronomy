@@ -40,8 +40,7 @@ class ImageData(PixelGrid, ImageNoise):
     """
     def __init__(self, image_data, exposure_time=None, background_rms=None, noise_map=None, gradient_boost_factor=None,
                  ra_at_xy_0=0, dec_at_xy_0=0, transform_pix2angle=None, ra_shift=0, dec_shift=0,
-                 eigen_vector_set=None,eigen_value_set=None,num_of_modes=None,primary_beam=None,
-                 marg=True):
+                 eigen_vector_set=None,eigen_value_set=None,num_of_modes=None,primary_beam=None,marg=True):
         """
 
         :param image_data: 2d numpy array of the image data
@@ -74,7 +73,7 @@ class ImageData(PixelGrid, ImageNoise):
         PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift)
         ImageNoise.__init__(self, image_data, exposure_time=exposure_time, background_rms=background_rms,
                             noise_map=noise_map, gradient_boost_factor=gradient_boost_factor, verbose=False,
-                            eigen_vector_set=None,eigen_value_set=None,num_of_modes=None,primary_beam=None,marg=False)
+                            eigen_vector_set=None,eigen_value_set=None,num_of_modes=None,primary_beam=None,marg=True)
         dim=nx*ny
         
         self._eigen_vector_set=eigen_vector_set
@@ -99,6 +98,9 @@ class ImageData(PixelGrid, ImageNoise):
     
     def check_marg(self):
         return self._marg
+    
+    def give_pb(self):
+        return self._pb
 
     def update_data(self, image_data):
         """
@@ -137,13 +139,6 @@ class ImageData(PixelGrid, ImageNoise):
         :return: the natural logarithm of the likelihood p(data|model)
         """
         
-        # multiply model mith primary beam
-        model=np.array(model)
-        
-        if self._pb is not None:
-            model=model*self._pb
-        
-        
         if self._eigen_vector_set is None or self._eigen_value_set is None:
             C_D = self.C_D_model(model)
             X2 = (model - self._data) ** 2 / (C_D + np.abs(additional_error_map)) * mask
@@ -151,11 +146,11 @@ class ImageData(PixelGrid, ImageNoise):
             logL = - np.sum(X2) / 2
             return logL
         else:
-            dchi2=np.zeros(self._num_of_modes)
+            dchi2 = np.zeros(self._num_of_modes)
             for i in range(self._num_of_modes):
-                coefficient=np.sum((util.image2array(model - self._data))*self._eigen_vector_set[i])
-                dchi2[i]=coefficient*coefficient/self._eigen_value_set[i]
-            logL=-0.5*np.sum(dchi2)
+                coefficient = np.sum((util.image2array(model - self._data)) * self._eigen_vector_set[i])
+                dchi2[i] = coefficient * coefficient / self._eigen_value_set[i]
+            logL = - 0.5 * np.sum(dchi2)
             return logL
                 
             

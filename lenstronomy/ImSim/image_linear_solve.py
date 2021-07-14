@@ -48,6 +48,12 @@ class ImageLinearFit(ImageModel):
         if self._pixelbased_bool is True:
             # update the pixel-based solver with the likelihood mask
             self.PixelSolver.set_likelihood_mask(self.likelihood_mask)
+            
+        self._pb=data_class.give_pb()
+        if self._pb is not None:
+            self._pb_lin = util.image2array(self._pb)
+        else:
+            self._pb_lin = None
         
         self._check_marg=data_class.check_marg()
 
@@ -283,6 +289,11 @@ class ImageLinearFit(ImageModel):
         # response of lensed source profile
         for i in range(0, n_source):
             image = source_light_response[i]
+            
+            #add primary beam before convolution
+            if self._pb is not None:
+                image *= self._pb_lin
+            
             image *= extinction
             image = self.ImageNumerics.re_size_convolve(image, unconvolved=unconvolved)
             A[n, :] = np.nan_to_num(self.image2array_masked(image), copy=False)
@@ -290,12 +301,22 @@ class ImageLinearFit(ImageModel):
         # response of deflector light profile (or any other un-lensed extended components)
         for i in range(0, n_lens_light):
             image = lens_light_response[i]
+            
+            #add primary beam before convolution
+            if self._pb is not None:
+                image *= self._pb_lin
+            
             image = self.ImageNumerics.re_size_convolve(image, unconvolved=unconvolved)
             A[n, :] = np.nan_to_num(self.image2array_masked(image), copy=False)
             n += 1
         # response of point sources
         for i in range(0, n_points):
             image = self.ImageNumerics.point_source_rendering(ra_pos[i], dec_pos[i], amp[i])
+            
+            #add primary beam before
+            if self._pb is not None:
+                image *= self._pb
+            
             A[n, :] = np.nan_to_num(self.image2array_masked(image), copy=False)
             n += 1
         return A
