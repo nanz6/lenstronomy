@@ -70,10 +70,10 @@ class ImageData(PixelGrid, ImageNoise):
         nx, ny = np.shape(image_data)
         if transform_pix2angle is None:
             transform_pix2angle = np.array([[1, 0], [0, 1]])
-        PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift)
+        PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift,primary_beam=None,marg=True)
         ImageNoise.__init__(self, image_data, exposure_time=exposure_time, background_rms=background_rms,
                             noise_map=noise_map, gradient_boost_factor=gradient_boost_factor, verbose=False,
-                            eigen_vector_set=None,eigen_value_set=None,num_of_modes=None,primary_beam=None,marg=True)
+                            eigen_vector_set=None,eigen_value_set=None,num_of_modes=None)
         dim=nx*ny
         
         self._eigen_vector_set=eigen_vector_set
