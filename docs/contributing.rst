@@ -1,1 +1,5 @@
-.. include:: ../CONTRIBUTING.md
+===========================
+Contributing to lenstronomy
+===========================
+
+.. include:: ../CONTRIBUTING.rst
