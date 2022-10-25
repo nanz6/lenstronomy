@@ -155,6 +155,13 @@ def test_grid_with_coords():
     assert ra_at_xy_0 == 0
     assert dec_at_xy_0 == 0
 
+    numPix = 11
+    deltaPix = .1
+    x_grid, y_grid, ra_at_xy_0, dec_at_xy_0, x_at_radec_0, y_at_radec_0, Mpix2coord, Mcoord2pix = util.make_grid_with_coordtransform(
+        numPix, deltaPix, subgrid_res=1, left_lower=True, center_ra=2, center_dec=3)
+    assert ra_at_xy_0 == 2
+    assert dec_at_xy_0 == 3
+
 def test_array2image():
     array = np.linspace(1, 100, 100)
     image = util.array2image(array)
@@ -315,11 +322,22 @@ def test_min_square_dist():
     assert dist[1] == 1
 
 
+def test_neighbor_select_fast():
+    a = np.ones(100)
+    a[41] = 0
+    x = np.linspace(0, 99, 100)
+    y = np.linspace(0, 99, 100)
+    x_mins, y_mins, values = util.local_minima_2d(a, x, y)
+    assert x_mins[0] == 41
+    assert y_mins[0] == 41
+    assert values[0] == 0
+
+
 def test_neighborSelect():
     a = np.ones(100)
     a[41] = 0
-    x = np.linspace(0,99,100)
-    y = np.linspace(0,99,100)
+    x = np.linspace(0, 99, 100)
+    y = np.linspace(0, 99, 100)
     x_mins, y_mins, values = util.neighborSelect(a, x, y)
     assert x_mins[0] == 41
     assert y_mins[0] == 41
@@ -383,6 +401,14 @@ def test_convert_bool_list():
     bool_list = util.convert_bool_list(n=3, k=[])
     assert len(bool_list) == 3
     assert bool_list[0] is False
+
+
+def test_area():
+    r = 1
+    x_, y_ = util.points_on_circle(radius=r, connect_ends=True, num_points=1000)
+    vs = np.dstack([x_, y_])[0]
+    a = util.area(vs)
+    npt.assert_almost_equal(a, np.pi * r**2, decimal=3)
 
 
 class TestRaise(unittest.TestCase):

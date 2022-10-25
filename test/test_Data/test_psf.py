@@ -31,8 +31,8 @@ class TestData(object):
         kernel_point_source = psf_class.kernel_point_source
         assert len(kernel_point_source) == 13
         kernel_super = psf_class.kernel_point_source_supersampled(supersampling_factor=3)
-        assert np.sum(kernel_point_source) == np.sum(kernel_super)
-        assert np.sum(kernel_point_source) == 1
+        npt.assert_almost_equal(np.sum(kernel_point_source), np.sum(kernel_super), decimal=9)
+        npt.assert_almost_equal(np.sum(kernel_point_source), 1, decimal=9)
 
     def test_kernel_subsampled(self):
         deltaPix = 0.05  # pixel size of image
@@ -124,6 +124,26 @@ class TestData(object):
         error_map = psf_kernel.psf_error_map
         assert error_map.all() == 0
 
+    def test_warning(self):
+        deltaPix = 0.05  # pixel size of image
+        subsampling_res = 4  # subsampling scale factor (in each dimension)
+        fwhm = 0.3  # FWHM of the PSF kernel
+
+        # create Gaussian/Pixelized kernels
+        # first we create the sub-sampled kernel
+        kernel_point_source_subsampled = kernel_util.kernel_gaussian(kernel_numPix=11 * subsampling_res + 1,
+                                                                     deltaPix=deltaPix / subsampling_res, fwhm=fwhm)
+        print(len(kernel_point_source_subsampled), 'test')
+        kwargs_psf = {'psf_type': 'PIXEL', 'kernel_point_source': kernel_point_source_subsampled,
+                      'point_source_supersampling_factor': subsampling_res,
+                      'psf_error_map': np.ones_like(kernel_point_source_subsampled)}
+        psf_kernel = PSF(**kwargs_psf)
+        n = len(psf_kernel.kernel_point_source)
+        error_map = psf_kernel.psf_error_map
+        assert len(error_map) == n
+
+
+
 
 class TestRaise(unittest.TestCase):
 
@@ -148,6 +168,8 @@ class TestRaise(unittest.TestCase):
         with self.assertRaises(ValueError):
             psf = PSF(psf_type='GAUSSIAN', fwhm=100, pixel_size=0.0001)
             psf.kernel_point_source_supersampled(supersampling_factor=3)
+        with self.assertRaises(ValueError):
+            psf = PSF(psf_type='PIXEL', kernel_point_source=-np.ones((3, 3)))
 
         with warnings.catch_warnings(record=True) as w:
             # Cause all warnings to always be triggered.
