@@ -2,11 +2,12 @@ import numpy as np
 
 from lenstronomy.Data.pixel_grid import PixelGrid
 from lenstronomy.Data.image_noise import ImageNoise
+from lenstronomy.Data.angular_sensitivity import AngularSensitivity
 
 __all__ = ['ImageData']
 
 
-class ImageData(PixelGrid, ImageNoise):
+class ImageData(PixelGrid, ImageNoise, AngularSensitivity):
     """
     class to handle the data, coordinate system and masking, including convolution with various numerical precisions
 
@@ -37,7 +38,7 @@ class ImageData(PixelGrid, ImageNoise):
 
     """
     def __init__(self, image_data, exposure_time=None, background_rms=None, noise_map=None, gradient_boost_factor=None,
-                 ra_at_xy_0=0, dec_at_xy_0=0, transform_pix2angle=None, ra_shift=0, dec_shift=0, primary_beam=None):
+                 ra_at_xy_0=0, dec_at_xy_0=0, transform_pix2angle=None, ra_shift=0, dec_shift=0, antenna_primary_beam=None):
         """
 
         :param image_data: 2d numpy array of the image data
@@ -52,15 +53,20 @@ class ImageData(PixelGrid, ImageNoise):
         :param dec_at_xy_0: dec coordinate at pixel (0,0)
         :param ra_shift: RA shift of pixel grid
         :param dec_shift: DEC shift of pixel grid
-        :param primary_beam: 2d numpy array; primary beam is specifically for interferometry images; should have the same size of image data
+        :param antenna_primary_beam: 2d numpy array with the same size of imaga_data;
+         more descriptions of the primary beam can be found in the AngularSensitivity class
         """
         nx, ny = np.shape(image_data)
         if transform_pix2angle is None:
             transform_pix2angle = np.array([[1, 0], [0, 1]])
-        PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift, primary_beam)
+        PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift)
         ImageNoise.__init__(self, image_data, exposure_time=exposure_time, background_rms=background_rms,
                             noise_map=noise_map, gradient_boost_factor=gradient_boost_factor, verbose=False)
-        
+        if antenna_primary_beam is not None:
+            pbx,pby=np.shape(antenna_primary_beam)
+            if (pbx,pby) != (nx,ny):
+                raise ValueError("The primary beam should have the same size with the image data!")
+        AngularSensitivity.__init__(self, antenna_primary_beam)
 
     def update_data(self, image_data):
         """
