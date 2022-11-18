@@ -15,10 +15,11 @@ class AngularSensitivity(object):
         """
 
         :param antenna_primary_beam: 2d numpy array. 
-         Primary beam is the angular EM power sensitivity of each antenna of an interferometric array like ALMA. 
-         Primary beam should also be provided by interferometric data reduction softwares like CASA. 
-         If the primary beam applies, it should be multiplied on one unconvolved model image, as regions with less EM sensitivity 
+         Primary beam is the angular power sensitivity of EM radiation antennae of some specific telescopes.
+         Usually the radiation sensitivity is largest at the center of the Field of View (FOV), and decays as the distance increases from the center. 
+         If the primary beam applies, it should be multiplied on the unconvolved model images, as regions with less EM sensitivity 
          get less flux from the model image after the multiplication with the corresponding primary beam.
+         For interferometric users, the primary beam should be provided by data reduction softwares like CASA.
         """
         self._pb = antenna_primary_beam
         

@@ -2,12 +2,11 @@ import numpy as np
 
 from lenstronomy.Data.pixel_grid import PixelGrid
 from lenstronomy.Data.image_noise import ImageNoise
-from lenstronomy.Data.angular_sensitivity import AngularSensitivity
 
 __all__ = ['ImageData']
 
 
-class ImageData(PixelGrid, ImageNoise, AngularSensitivity):
+class ImageData(PixelGrid, ImageNoise):
     """
     class to handle the data, coordinate system and masking, including convolution with various numerical precisions
 
@@ -29,6 +28,8 @@ class ImageData(PixelGrid, ImageNoise, AngularSensitivity):
     - 'noise_map': Gaussian noise (1-sigma) for each individual pixel.
     If this keyword is set, the other noise properties will be ignored.
 
+    optional keywords for interferometric quantities:
+    - 'antenna_primary_beam': primary beam pattern of antennae (now treat each antenna with the same primary beam)
 
     ** notes **
     the likelihood for the data given model P(data|model) is defined in the function below. Please make sure that
@@ -59,14 +60,9 @@ class ImageData(PixelGrid, ImageNoise, AngularSensitivity):
         nx, ny = np.shape(image_data)
         if transform_pix2angle is None:
             transform_pix2angle = np.array([[1, 0], [0, 1]])
-        PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift)
+        PixelGrid.__init__(self, nx, ny, transform_pix2angle, ra_at_xy_0 + ra_shift, dec_at_xy_0 + dec_shift, antenna_primary_beam)
         ImageNoise.__init__(self, image_data, exposure_time=exposure_time, background_rms=background_rms,
                             noise_map=noise_map, gradient_boost_factor=gradient_boost_factor, verbose=False)
-        if antenna_primary_beam is not None:
-            pbx,pby=np.shape(antenna_primary_beam)
-            if (pbx,pby) != (nx,ny):
-                raise ValueError("The primary beam should have the same size with the image data!")
-        AngularSensitivity.__init__(self, antenna_primary_beam)
 
     def update_data(self, image_data):
         """
