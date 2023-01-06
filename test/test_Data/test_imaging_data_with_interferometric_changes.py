@@ -20,7 +20,7 @@ def test_interferometry_likelihood():
     model_convolved[0,:] = 1
     model_convolved[:,4] = 1
     
-    data_class = ImageData(image_data = test_data, background_rms = 1, log_likelihood_constant = 1.0,  likelihood_method = 'interferometry_natwt')
+    data_class = ImageData(image_data = test_data, background_rms = 2.5, log_likelihood_constant = -1.0,  likelihood_method = 'interferometry_natwt')
     
     assert data_class.likelihood_method() == 'interferometry_natwt'
     npt.assert_almost_equal(data_class.log_likelihood([model_unconvolved,model_convolved],mask), -0.712, decimal=8)

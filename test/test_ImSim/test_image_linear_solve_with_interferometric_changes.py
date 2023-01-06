@@ -49,7 +49,7 @@ def test_image_linear_solve_with_primary_beam_and_interferometry_psf():
             else:
                 psf_test[i,j] = np.sin(r*0.5)/(r*0.5)
     
-    # note that the simulated noise here is not the interferometric noise.
+    # note that the simulated noise here is not the interferometric noise. we just use it to test the numerics
     test_noise = scipy.signal.fftconvolve(np.random.normal(0,1,(numPix,numPix)),psf_test,mode='same')
     
     kwargs_data = sim_util.data_configure_simple(numPix, deltaPix, exp_time, background_rms)
